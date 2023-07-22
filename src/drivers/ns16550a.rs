@@ -11,12 +11,18 @@ register_bitfields! {
 	// Interrupt enable register
 	IER [
 		// Enable recieved data available interrupt
-		ERBFI OFFSET(0) NUMBITS(1) []
+		ERBFI OFFSET(0) NUMBITS(1) [
+			Disabled = 0,
+			Enabled = 1
+		]
 	],
 	// FIFO control register
 	FCR [
 		// FIFO is enabled
-		FIFOEN OFFSET(0) NUMBITS(1) []
+		FEN OFFSET(0) NUMBITS(1) [
+			FifosDisabled = 0,
+			FifosEnabled = 1
+		]
 	],
 	// Line control register
 	LCR [
@@ -65,8 +71,8 @@ impl Uart for NS16550A {
 	fn init(&self) {
 		let registers = self.registers();
 		registers.LCR.write(LCR::WLS::EightBits);
-		registers.FCR.write(FCR::FIFOEN::SET);
-		registers.IER.write(IER::ERBFI::SET);
+		registers.FCR.write(FCR::FEN::FifosEnabled);
+		registers.IER.write(IER::ERBFI::Enabled);
 	}
 
 	fn read(&self) -> Option<u8> {

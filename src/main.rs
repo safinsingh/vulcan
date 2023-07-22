@@ -2,8 +2,13 @@
 #![no_std]
 #![no_main]
 
+use fdt::Fdt;
+use mm::pmm::Pmm;
+
 mod drivers;
 mod io;
+mod macros;
+mod mm;
 
 #[naked]
 #[no_mangle]
@@ -37,8 +42,24 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 #[no_mangle]
-extern "C" fn kmain(hart: usize, _fdt_ptr: usize) -> ! {
+extern "C" fn kmain(hart: usize, fdt_ptr: *const u8) -> ! {
 	kprintln!("Hello, world from hart {}!", hart);
+	let fdt = unsafe {
+		Fdt::from_ptr(fdt_ptr).expect("Failed to construct FDT structure")
+	};
+
+	let region = fdt.memory().regions().next().expect("???wut???");
+
+	let start = region.starting_address as *mut u8;
+	let end = unsafe { start.add(region.size.unwrap()) };
+
+	let mut pmm = Pmm::new(start, end);
+	unsafe {
+		pmm.init();
+	}
+
+	kprintln!("lol?");
+
 	loop {}
 }
 
